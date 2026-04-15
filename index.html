@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Globalisor | Flight to Singapore Roadmap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --bg-dark: #0a0e14;
+            --card-bg: rgba(13, 25, 41, 0.7);
+            --text-main: #ffffff;
+            --text-dim: #a0aec0;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --route-line: rgba(0, 242, 254, 0.3);
+            --accent: #22d3ee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+
+        /* Dynamic Background Layer */
+        #dynamicBg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 1.2s ease-in-out, filter 1.2s ease-in-out;
+            filter: brightness(0.4) saturate(0.8);
+        }
+
+        #dynamicBg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent, var(--bg-dark));
+        }
+
+        .header {
+            text-align: center;
+            padding: 180px 20px 140px;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .roadmap-container {
+            position: relative;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 50px 0 300px; /* Large bottom clearance */
+        }
+
+        /* The Flight Path */
+        .flight-path-svg {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .path-line {
+            fill: none;
+            stroke: var(--route-line);
+            stroke-width: 3;
+            stroke-dasharray: 12 12;
+            stroke-linecap: round;
+        }
+
+        .path-progress {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 4;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            transition: stroke-dashoffset 1s ease-in-out;
+            filter: drop-shadow(0 0 8px var(--primary));
+        }
+
+        /* Airplane Icon */
+        .airplane {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            z-index: 10;
+            pointer-events: none;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 15px var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .airplane svg {
+            width: 100%;
+            height: 100%;
+            fill: #fff;
+            transform: rotate(90deg); /* Initial orientation */
+        }
+
+        /* Month Entries */
+        .month-entry {
+            display: flex;
+            width: 100%;
+            margin-bottom: 250px;
+            position: relative;
+            z-index: 5;
+            align-items: center;
+            transition: all 0.6s;
+            padding: 0 120px; /* Safe padding for aircraft */
+        }
+
+        .month-entry.left { justify-content: flex-start; text-align: right; }
+        .month-entry.right { justify-content: flex-end; text-align: left; }
+
+        .city-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        /* City Labels on Path */
+        .city-path-label {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--primary);
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.5;
+            z-index: 2;
+        }
+
+        .month-card {
+            width: 38%;
+            padding: 30px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            transition: all 0.6s;
+            opacity: 0.3;
+            transform: scale(0.9);
+        }
+
+        .month-entry.active .month-card {
+            opacity: 1;
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px -10px rgba(0, 242, 254, 0.3);
+        }
+
+        .city-name {
+            display: block;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .milestone-label {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Journey Dashboard */
+        .journey-dashboard {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1100px;
+            background: rgba(10, 25, 41, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px 40px;
+            z-index: 1000;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .stat-value span {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin-left: 5px;
+        }
+
+        .progress-mini-bar {
+            grid-column: span 4;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Navigation Controls */
+        .nav-controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            background: rgba(10, 20, 40, 0.9);
+            padding: 20px 30px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .nav-buttons-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 25px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.complete {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            border-color: var(--text-dim);
+            color: var(--text-dim);
+        }
+
+        .week-indicator {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* Week Accordion */
+        .week-unit {
+            margin-top: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .week-header {
+            padding: 12px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .week-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .week-unit.active .week-content { max-height: 200px; padding-bottom: 15px; }
+
+        .task-list { list-style: none; }
+        .task-list li {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .task-list li::before {
+            content: '➤';
+            position: absolute;
+            left: 0;
+            font-size: 0.7rem;
+            top: 2px;
+            color: var(--primary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .month-card { width: 90%; padding: 25px; }
+            .month-entry { padding: 0 20px; margin-bottom: 60px; }
+            .month-entry.left, .month-entry.right { justify-content: center; text-align: center; }
+            .flight-path-svg, .airplane { display: none !important; }
+            
+            .header h1 { font-size: 2.5rem; }
+            .journey-dashboard { 
+                padding: 15px 20px; 
+                top: 10px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .progress-mini-bar {
+                grid-column: span 2;
+            }
+            .stat-value { font-size: 1.3rem; }
+            .stat-value span { font-size: 0.75rem; }
+            .stat-label { font-size: 0.6rem; }
+        }
+
+        @media (max-width: 600px) {
+            .roadmap-container { padding-bottom: 250px; }
+            
+            .month-card { padding: 20px 15px; }
+            
+            .journey-dashboard {
+                width: 95%;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+            
+            /* Hide redundant stats to clear vertical space on phones */
+            .stat-item:nth-child(1), .stat-item:nth-child(3) {
+                display: none;
+            }
+
+            .nav-controls {
+                width: 100%;
+                bottom: 0;
+                border-radius: 20px 20px 0 0;
+                padding: 15px 10px;
+            }
+            .nav-buttons-row {
+                width: 100%;
+                flex-direction: row;
+                gap: 8px;
+            }
+            .nav-btn {
+                flex: 1;
+                min-width: unset;
+                padding: 12px 5px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            .header { padding: 180px 15px 50px; }
+            .header h1 { font-size: 1.8rem; }
+            .city-name { font-size: 1.3rem; margin-bottom: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="dynamicBg"></div>
+
+    <div class="journey-dashboard">
+        <div class="stat-item">
+            <div class="stat-label">Total Distance</div>
+            <div class="stat-value">4,150 <span>KM</span></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Distance Covered</div>
+            <div class="stat-value" id="distCovered">0 <span>KM</span></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Remaining</div>
+            <div class="stat-value" id="distRemaining">4,150 <span>KM</span></div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Current Progress</div>
+            <div class="stat-value" id="weekDisplay">Week 1 <span>/ 20</span></div>
+        </div>
+        <div class="progress-mini-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+    </div>
+
+    <header class="header">
+        <div class="milestone-label">Flight Plan: Delhi ➔ Chennai ➔ Sri Lanka ➔ Malaysia ➔ Singapore</div>
+        <h1>Product Flightmap</h1>
+        <p>Globalisor Project Takeoff: From Delhi to Singapore Headquarters</p>
+    </header>
+
+    <div class="roadmap-container" id="roadmap">
+        <svg class="flight-path-svg" viewBox="0 0 1000 1850" preserveAspectRatio="none">
+            <path id="flightLine" class="path-line" d="M500,120 C700,280 300,400 500,600 C700,800 300,1000 500,1200 C700,1400 300,1600 500,1800" />
+            <path id="progressLine" class="path-progress" d="M500,120 C700,280 300,400 500,600 C700,800 300,1000 500,1200 C700,1400 300,1600 500,1800" />
+        </svg>
+
+        <!-- Compact Branded Globalisor Aircraft -->
+        <div class="airplane" id="airplane">
+            <div style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <!-- Circular Branded Medallion -->
+                <div style="background: rgba(255, 255, 255, 0.95); width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; z-index: 2;">
+                    <!-- High-Res Quadrant Globe SVG (Compact) -->
+                    <svg width="70" height="70" viewBox="0 0 100 100">
+                        <defs>
+                            <clipPath id="circleClip2"><circle cx="50" cy="50" r="28" /></clipPath>
+                        </defs>
+                        <g id="nodes-pill-compact">
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" /> <circle cx="50" cy="8" r="6" fill="#f06c28" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(45 50 50)" /> <circle cx="79" cy="21" r="6" fill="#db7290" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(90 50 50)" /> <circle cx="92" cy="50" r="6" fill="#f06c28" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(135 50 50)" /> <circle cx="79" cy="79" r="6" fill="#db7290" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(180 50 50)" /> <circle cx="50" cy="92" r="6" fill="#f06c28" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(225 50 50)" /> <circle cx="21" cy="79" r="6" fill="#db7290" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(270 50 50)" /> <circle cx="8" cy="50" r="6" fill="#f06c28" />
+                            <rect x="48.5" y="8" width="3" height="15" rx="1.5" fill="#f4b459" transform="rotate(315 50 50)" /> <circle cx="21" cy="21" r="6" fill="#db7290" />
+                        </g>
+                        <g clip-path="url(#circleClip2)">
+                            <rect x="22" y="22" width="28" height="28" fill="#60c1c1" />
+                            <rect x="50" y="22" width="28" height="28" fill="#4fb3b3" />
+                            <rect x="22" y="50" width="28" height="28" fill="#268181" />
+                            <rect x="50" y="50" width="28" height="28" fill="#1a5d5d" />
+                        </g>
+                    </svg>
+                </div>
+                <!-- Mini Text Label -->
+                <div style="background: var(--primary); color: #000; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 14px; padding: 2px 10px; border-radius: 10px; margin-top: -15px; z-index: 3; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">Globalisor</div>
+                
+                <!-- Compact Airplane Indicator -->
+                <svg viewBox="0 0 24 24" id="airplaneIndicator" style="width: 35px; height: 35px; fill: #fff; margin-top: -10px; z-index: 1;">
+                    <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Month 1: Delhi -->
+        <div class="month-entry left" id="month1" style="margin-top: 50px;">
+            <div class="month-card">
+                <div class="city-tag">Departure Origin</div>
+                <span class="city-name">Delhi (DEL)</span>
+                <span class="milestone-label" style="display: block; margin-top: 5px; margin-bottom: 20px;">SPRINT 1 - DURATION: Apr 15 to 30</span>
+
+                
+                <div class="week-unit">
+                    <div class="week-header">Week 1-2: Architecture Setup & Core Deployment <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>System architecture design</li>
+                            <li>Backend setup</li>
+                            <li>Database schema design (multi-tenant)</li>
+                            <li>Frontend base setup</li>
+                            <li>Deployment pipeline setup</li>
+                            <li>Functional requirement analysis</li>
+                        </ul>
+                    </div>
+                </div>
+                <span class="milestone-label" style="display: block; margin-top: 30px; margin-bottom: 15px;">SPRINT 2 - DURATION: May 1 – May 15</span>
+
+                <div class="week-unit">
+                    <div class="week-header">Week 3-4: User flow – Core Design <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>User flow definition (per service)</li>
+                            <li>Service catalog design</li>
+                            <li>Data collection forms (service-specific)</li>
+                            <li>Charges configuration per service</li>
+                            <li>Approval workflow design</li>
+                            <li>Document collection module</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Month 2: Chennai -->
+        <div class="month-entry right" id="month2">
+            <div class="month-card">
+                <div class="city-tag">Checkpoint Alpha</div>
+                <span class="city-name">Chennai (MAA)</span>
+                <span class="milestone-label" style="display: block; margin-top: 5px; margin-bottom: 20px;">SPRINT 3 - DURATION: May 16 – May 31</span>
+                
+                <div class="week-unit">
+                    <div class="week-header">Week 5-6: Payments & Transaction Flow <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>Payment initiation by client</li>
+                            <li>Payment gateway integration (e.g., Stripe – tentative)</li>
+                            <li>Transaction tracking</li>
+                            <li>Payment status handling</li>
+                            <li>Invoice/receipt generation (basic)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <span class="milestone-label" style="display: block; margin-top: 30px; margin-bottom: 15px;">SPRINT 4 - DURATION: June 01 – June 30</span>
+
+                <div class="week-unit">
+                    <div class="week-header">Week 7-8: KYC & Compliance Integration <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>Integration with Compliance Box (KYC verification)</li>
+                            <li>Background verification workflow</li>
+                            <li>Status tracking (Pending / Approved / Rejected)</li>
+                            <li>Document validation layer</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Month 3: Srilanka -->
+        <div class="month-entry left" id="month3">
+            <div class="month-card">
+                <div class="city-tag">Transit Alpha</div>
+                <span class="city-name">Sri Lanka (CMB)</span>
+                <span class="milestone-label" style="display: block; margin-top: 5px; margin-bottom: 20px;">SPRINT 5 - DURATION: June 16 – June 30</span>
+                
+                <div class="week-unit">
+                    <div class="week-header">Week 9 -10: Notification Framework <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>Email notification system</li>
+                            <li>Notification triggers:<br>&nbsp;&nbsp;- Onboarding<br>&nbsp;&nbsp;- Payment completion<br>&nbsp;&nbsp;- Transaction updates<br>&nbsp;&nbsp;- Reminders</li>
+                            <li>Newsletter & blog module (searchable)</li>
+                            <li>Regulatory updates (e.g., ACRA updates notification system)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <span class="milestone-label" style="display: block; margin-top: 30px; margin-bottom: 15px;">SPRINT 6 - DURATION: July 01 – July 15</span>
+
+                <div class="week-unit">
+                    <div class="week-header">Week 11 -12: Data Migration <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>Migration of existing client data</li>
+                            <li>Data validation & integrity checks</li>
+                            <li>Secure import pipelines</li>
+                            <li>Mapping old system to new structure</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Month 4: Malaysia -->
+        <div class="month-entry right" id="month4">
+            <div class="month-card">
+                <div class="city-tag">Regional Operations</div>
+                <span class="city-name">Malaysia (KUL)</span>
+                <span class="milestone-label" style="display: block; margin-top: 5px; margin-bottom: 20px;">SPRINT 7 - DURATION: July 16 – Aug 15</span>
+                
+                <div class="week-unit">
+                    <div class="week-header">Week 13 -16: Staff Portal Development <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>Service request management dashboard</li>
+                            <li>Client service ticket mechanism</li>
+                            <li>Task assignment & tracking</li>
+                            <li>Document handling interface</li>
+                            <li>Internal communication tools</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Month 5: Singapore -->
+        <div class="month-entry left" id="month5" style="margin-bottom: 100px;">
+            <div class="month-card">
+                <div class="city-tag">Global Headquarters</div>
+                <span class="city-name">Singapore (SIN)</span>
+                <span class="milestone-label" style="display: block; margin-top: 5px; margin-bottom: 20px;">SPRINT 8 - DURATION: Aug 16 – Sep 7</span>
+                
+                <div class="week-unit">
+                    <div class="week-header">Week 17 -19: Admin Portal Development <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>User & role management</li>
+                            <li>Service configuration & pricing control</li>
+                            <li>System monitoring dashboard</li>
+                            <li>Content management (newsletter/blog)</li>
+                            <li>Notification control panel</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <span class="milestone-label" style="display: block; margin-top: 30px; margin-bottom: 15px;">SPRINT 9 - DURATION: Sep 8 – Sep 15</span>
+
+                <div class="week-unit">
+                    <div class="week-header">Week 20: Landing Page & Final Touches <span>+</span></div>
+                    <div class="week-content">
+                        <ul class="task-list">
+                            <li>Marketing landing page</li>
+                            <li>Product overview sections</li>
+                            <li>Lead capture forms</li>
+                            <li>SEO-ready content</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer: Grace Period -->
+        <div class="grace-period-footer" style="padding: 20px; border-radius: 12px; max-width: 650px; margin: 40px auto 100px; text-align: left; position: relative; z-index: 10;">
+            <div style="background: rgba(4, 25, 45, 0.7); backdrop-filter: blur(8px); border: 1px solid var(--primary); padding: 30px; border-radius: 12px; position: relative; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.1);">
+                <div style="position: absolute; top: -12px; left: 30px; background: #000; padding: 0 15px; font-weight: bold; color: var(--primary); letter-spacing: 1px;">FINAL PHASE</div>
+                <h3 style="color: var(--text-light); margin-top: 10px; margin-bottom: 15px; font-size: 1.4rem;">Grace Period <span style="font-size: 1rem; color: var(--text-dim); margin-left: 10px;">(Sep 16 – Sep 30)</span></h3>
+                <p style="color: var(--primary); margin-bottom: 15px; font-weight: 500;">Purpose:</p>
+                <ul class="task-list" style="margin-bottom: 0;">
+                    <li>Bug fixing</li>
+                    <li>Performance optimization</li>
+                    <li>UAT (User Acceptance Testing)</li>
+                    <li>Final client feedback incorporation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-controls">
+        <div class="week-indicator" id="navWeekIndicator">JOURNEY STATUS: PRE-FLIGHT</div>
+        <div class="nav-buttons-row">
+            <button class="nav-btn" id="prevBtn" disabled>⬅ Previous Sprint</button>
+            <button class="nav-btn complete" id="nextBtn">Complete Sprint ➡</button>
+        </div>
+    </div>
+
+    <script>
+        const monthEntries = document.querySelectorAll('.month-entry');
+        const airplane = document.getElementById('airplane');
+        const flightPath = document.getElementById('flightLine');
+        const progressLine = document.getElementById('progressLine');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const dynamicBg = document.getElementById('dynamicBg');
+        
+        // Stats Elements
+        const distCoveredEl = document.getElementById('distCovered');
+        const distRemainingEl = document.getElementById('distRemaining');
+        const weekDisplayEl = document.getElementById('weekDisplay');
+        const progressBarEl = document.getElementById('progressBar');
+        const navWeekIndicator = document.getElementById('navWeekIndicator');
+
+        const cityBackgrounds = [
+            'images/delhi.png',
+            'images/chennai.png',
+            'images/srilanka.png',
+            'images/malaysia.png',
+            'images/singapore.png'
+        ];
+
+        const TOTAL_DISTANCE = 4150;
+        const TOTAL_SPRINTS = 9;
+        const KM_PER_SPRINT = TOTAL_DISTANCE / TOTAL_SPRINTS;
+
+        let currentSprint = 0; // 0 to 9
+        let lastSprint = 0;
+
+        // Path Length Calculation
+        const pathLength = progressLine.getTotalLength();
+        progressLine.style.strokeDasharray = pathLength;
+        progressLine.style.strokeDashoffset = pathLength;
+
+        function updateJourney(sprintIndex) {
+            const isGoingBack = sprintIndex < lastSprint;
+            lastSprint = sprintIndex;
+
+            // Update Stats
+            const coveredKM = Math.round(sprintIndex * KM_PER_SPRINT);
+            const remainingKM = TOTAL_DISTANCE - coveredKM;
+            const progressPercent = (sprintIndex / TOTAL_SPRINTS) * 100;
+
+            distCoveredEl.innerHTML = `${coveredKM.toLocaleString()} <span>KM</span>`;
+            distRemainingEl.innerHTML = `${remainingKM.toLocaleString()} <span>KM</span>`;
+            weekDisplayEl.innerHTML = `Sprint ${Math.max(1, sprintIndex)} <span>/ ${TOTAL_SPRINTS}</span>`;
+            progressBarEl.style.width = `${progressPercent}%`;
+
+            if (sprintIndex === 0) {
+                navWeekIndicator.innerText = "JOURNEY STATUS: READY FOR TAKEOFF";
+            } else if (sprintIndex === TOTAL_SPRINTS) {
+                navWeekIndicator.innerText = "JOURNEY STATUS: MISSION SUCCESS - ARRIVED IN SINGAPORE";
+            } else {
+                navWeekIndicator.innerText = `JOURNEY STATUS: SPRINT ${sprintIndex} IN PROGRESS`;
+            }
+
+            // Highlight Active Month and Sprint dynamically
+            const allSprints = document.querySelectorAll('.week-unit');
+            allSprints.forEach(s => { if (s && s.classList) s.classList.remove('active'); });
+            monthEntries.forEach(m => { if (m && m.classList) m.classList.remove('active'); });
+
+            let monthIndex = 0;
+            if (sprintIndex > 0) {
+                const safeIndex = Math.min(sprintIndex - 1, allSprints.length - 1);
+                if (safeIndex >= 0 && safeIndex < allSprints.length) {
+                    const activeSprintEl = allSprints[safeIndex];
+                    if (activeSprintEl && activeSprintEl.classList) {
+                        activeSprintEl.classList.add('active');
+                        const parentMonth = activeSprintEl.closest('.month-entry');
+                        if (parentMonth && parentMonth.classList) {
+                            parentMonth.classList.add('active');
+                            const foundIndex = Array.from(monthEntries).indexOf(parentMonth);
+                            if (foundIndex !== -1) monthIndex = foundIndex;
+                        }
+                    }
+                }
+            } else {
+                if (monthEntries.length > 0 && monthEntries[0].classList) {
+                    monthEntries[0].classList.add('active');
+                }
+                monthIndex = 0;
+            }
+
+            // Update Dynamic Background
+            dynamicBg.style.backgroundImage = `url('${cityBackgrounds[monthIndex]}')`;
+
+            // ViewBox and Elements Rect
+            const svgEl = document.querySelector('.flight-path-svg');
+            const svgRect = svgEl.getBoundingClientRect();
+            const containerRect = document.getElementById('roadmap').getBoundingClientRect();
+
+            // Find visual Y target aligned exactly with the DOM Sprint Header
+            let targetY_inContainer = 0;
+            if (sprintIndex === 0) {
+                targetY_inContainer = 120 * (svgRect.height / 1850) || 0; // Top of the SVG path
+            } else {
+                const safeIndex = Math.min(sprintIndex - 1, allSprints.length - 1);
+                const activeSprintEl = allSprints[safeIndex];
+                if (activeSprintEl) {
+                    const headerEl = activeSprintEl.querySelector('.week-header') || activeSprintEl;
+                    const headerRect = headerEl.getBoundingClientRect();
+                    // Align perfectly vertical-center of the Header
+                    targetY_inContainer = headerRect.top - containerRect.top + (headerRect.height / 2);
+                }
+            }
+
+            // Binary Search to trace the perfectly precise curved location on the SVG corresponding to target Y
+            const targetSvgY = targetY_inContainer / (svgRect.height / 1850 || 1);
+            let low = 0;
+            let high = pathLength;
+            let dist = 0;
+            
+            for (let i = 0; i < 30; i++) {
+                const mid = (low + high) / 2;
+                const pt = progressLine.getPointAtLength(mid);
+                if (pt.y < targetSvgY) low = mid;
+                else high = mid;
+                dist = mid;
+            }
+
+            const point = progressLine.getPointAtLength(dist);
+            const percentage = dist / pathLength; // Re-sync Blue Glow line using the visual progress length
+            
+            // Rotation based on tangent curve
+            const pointAhead = progressLine.getPointAtLength(Math.min(pathLength, dist + 10));
+            const pointBehind = progressLine.getPointAtLength(Math.max(0, dist - 10));
+            
+            let angle;
+            if (isGoingBack) {
+                angle = Math.atan2(pointBehind.y - point.y, pointBehind.x - point.x) * 180 / Math.PI;
+            } else {
+                angle = Math.atan2(pointAhead.y - point.y, pointAhead.x - point.x) * 180 / Math.PI;
+            }
+
+            // Visual Positioning
+            const x = point.x * (svgRect.width / 1000) + (svgRect.left - containerRect.left);
+            const y = point.y * (svgRect.height / 1850) + (svgRect.top - containerRect.top);
+
+            airplane.style.left = `${x - 50}px`; 
+            airplane.style.top = `${y - 70}px`;
+            
+            const planeSvg = airplane.querySelector('#airplaneIndicator');
+            planeSvg.style.transform = `rotate(${angle + 90}deg)`;
+
+            // Update Progress Line
+            progressLine.style.strokeDashoffset = pathLength * (1 - percentage);
+
+            // Scroll Smoothly to the active month
+            monthEntries[monthIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Update Nav Buttons
+            prevBtn.disabled = sprintIndex === 0;
+            nextBtn.disabled = sprintIndex === TOTAL_SPRINTS;
+            
+            if (sprintIndex === TOTAL_SPRINTS) {
+                nextBtn.innerHTML = 'MISSION COMPLETE 🏁';
+                nextBtn.style.background = '#10b981';
+                nextBtn.style.borderColor = '#10b981';
+            } else {
+                nextBtn.innerHTML = 'Complete Sprint ➡';
+                nextBtn.style.background = 'var(--primary)';
+                nextBtn.style.borderColor = 'var(--primary)';
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSprint < TOTAL_SPRINTS) {
+                currentSprint++;
+                updateJourney(currentSprint);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSprint > 0) {
+                currentSprint--;
+                updateJourney(currentSprint);
+            }
+        });
+
+        // Accordion (Fallback for manual click)
+        document.querySelectorAll('.week-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('active');
+            });
+        });
+
+        window.onload = () => {
+            setTimeout(() => updateJourney(0), 500);
+        };
+    </script>
+</body>
+</html>
