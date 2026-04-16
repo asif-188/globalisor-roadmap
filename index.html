@@ -607,6 +607,7 @@
                             <li>Background verification workflow</li>
                             <li>Status tracking (Pending / Approved / Rejected)</li>
                             <li>Document validation layer</li>
+                            <li>E-Sign</li>
                         </ul>
                     </div>
                 </div>
@@ -621,13 +622,15 @@
                 <span class="milestone-label" style="display: block; margin-top: 5px; margin-bottom: 20px;">SPRINT 5 - DURATION: June 16 – June 30</span>
                 
                 <div class="week-unit">
-                    <div class="week-header">Week 9 -10: Notification Framework <span>+</span></div>
+                    <div class="week-header">Week 9 -10: Incorporation Document & Notification Framework <span>+</span></div>
                     <div class="week-content">
                         <ul class="task-list">
-                            <li>Email notification system</li>
-                            <li>Notification triggers:<br>&nbsp;&nbsp;- Onboarding<br>&nbsp;&nbsp;- Payment completion<br>&nbsp;&nbsp;- Transaction updates<br>&nbsp;&nbsp;- Reminders</li>
-                            <li>Newsletter & blog module (searchable)</li>
-                            <li>Regulatory updates (e.g., ACRA updates notification system)</li>
+                            <li>Generating multiple forms</li>
+                            <li>Setup Event-Driven Notification Engine</li>
+                            <li>SendGrid Integration</li>
+                            <li>Email Event Mapping</li>
+                            <li>Subdomain Configuration for Sender Email ID</li>
+                            <li>Dynamic Email template setup</li>
                         </ul>
                     </div>
                 </div>
@@ -879,8 +882,15 @@
             // Update Progress Line
             progressLine.style.strokeDashoffset = pathLength * (1 - percentage);
 
-            // Scroll Smoothly to the active month
-            monthEntries[monthIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Scroll Smoothly to perfectly frame the active text and airplane in viewport center
+            if (sprintIndex > 0 && allSprints.length > 0) {
+                const safeIndex = Math.min(sprintIndex - 1, allSprints.length - 1);
+                if (allSprints[safeIndex]) {
+                    allSprints[safeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (monthEntries[monthIndex]) {
+                monthEntries[monthIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
 
             // Update Nav Buttons
             prevBtn.disabled = sprintIndex === 0;
